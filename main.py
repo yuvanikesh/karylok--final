@@ -70,7 +70,7 @@ async def lifespan(app: FastAPI):
 # FastAPI App Initialization
 # ===========================
 app = FastAPI(
-    title="Deepfake Audio Detection API",
+    title="Scam Guard API",
     description="Detect AI-generated/deepfake audio using Wav2Vec2-based classifier",
     version="1.0.0",
     lifespan=lifespan,

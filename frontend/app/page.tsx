@@ -49,7 +49,7 @@ export default function Home() {
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-white shadow-lg shadow-indigo-500/30">
                 <ShieldCheck className="h-5 w-5" />
               </div>
-              <span className="text-xl font-bold tracking-tight text-white">DeepGuard</span>
+              <span className="text-xl font-bold tracking-tight text-white">Scam Guard</span>
             </div>
             <nav className="flex items-center gap-6 text-sm font-medium text-slate-300">
               <a href="#" className="hover:text-indigo-400 transition-colors">Features</a>
