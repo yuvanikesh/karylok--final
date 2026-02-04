@@ -11,6 +11,9 @@ export default function Home() {
   const [result, setResult] = useState<DetectionResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [language, setLanguage] = useState<string>("English");
+
+  const LANGUAGES = ["Tamil", "English", "Hindi", "Malayalam", "Telugu"];
 
   const handleFileSelect = async (audioBase64: string, filename: string) => {
     try {
@@ -18,7 +21,7 @@ export default function Home() {
       setError(null);
       setResult(null);
 
-      const response = await detectAudio(audioBase64);
+      const response = await detectAudio(audioBase64, language);
       setResult(response);
     } catch (err: any) {
       console.error("Analysis failed:", err);
@@ -91,6 +94,30 @@ export default function Home() {
                 <p className="text-sm text-slate-400">Upload an audio file to test the engine</p>
               </div>
 
+              <div className="mb-6 flex justify-center">
+                <div className="relative inline-flex items-center">
+                  <label htmlFor="language-select" className="mr-3 text-sm font-medium text-slate-300">Select Language:</label>
+                  <select
+                    id="language-select"
+                    value={language}
+                    onChange={(e) => setLanguage(e.target.value)}
+                    className="block w-40 appearance-none rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    disabled={loading}
+                  >
+                    {LANGUAGES.map((lang) => (
+                      <option key={lang} value={lang} className="bg-slate-900 text-white">
+                        {lang}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
+                    <svg className="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
               <div className="mb-8 flex justify-center">
                 <FileUpload
                   onFileSelect={handleFileSelect}
@@ -104,51 +131,60 @@ export default function Home() {
                   <p className="mt-2 text-sm text-slate-400">Analyzing audio patterns...</p>
                 </div>
               )}
-
-              {result && !loading && (
-                <div className={cn(
-                  "mt-6 overflow-hidden rounded-xl border p-6 transition-all duration-500 animate-in fade-in slide-in-from-bottom-4 backdrop-blur-md",
-                  result.prediction === "Real"
-                    ? "border-green-500/30 bg-green-500/10"
-                    : "border-red-500/30 bg-red-500/10"
-                )}>
-                  <div className="flex items-start gap-4">
-                    <div className={cn(
-                      "flex h-12 w-12 shrink-0 items-center justify-center rounded-full shadow-lg",
-                      result.prediction === "Real" ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"
-                    )}>
-                      {result.prediction === "Real" ? <ShieldCheck className="h-6 w-6" /> : <AlertTriangle className="h-6 w-6" />}
-                    </div>
-
-                    <div className="flex-1 text-left">
-                      <h4 className={cn(
-                        "text-lg font-bold",
-                        result.prediction === "Real" ? "text-green-400" : "text-red-400"
-                      )}>
-                        {result.prediction === "Real" ? "Authentic Audio Detected" : "AI-Generated / Deepfake"}
-                      </h4>
-
-                      <div className="mt-2 flex items-center gap-4 text-sm">
-                        <div className="flex flex-col">
-                          <span className="text-slate-400">Confidence</span>
-                          <span className="font-semibold text-white">{(result.confidence * 100).toFixed(1)}%</span>
+              {/* Analysis Result */}
+              {result && (
+                <div className="mx-auto max-w-xl animate-in fade-in slide-in-from-bottom-4 duration-700">
+                  <div className={cn(
+                    "overflow-hidden rounded-2xl border p-6 backdrop-blur-xl transition-all",
+                    result.classification === "AI_GENERATED"
+                      ? "border-red-500/30 bg-red-950/30 shadow-[0_0_30px_-10px_rgba(239,68,68,0.5)]"
+                      : "border-emerald-500/30 bg-emerald-950/30 shadow-[0_0_30px_-10px_rgba(16,185,129,0.5)]"
+                  )}>
+                    <div className="mb-6 flex items-center justify-between border-b border-white/10 pb-4">
+                      <div className="flex items-center gap-3">
+                        <div className={cn(
+                          "flex h-10 w-10 items-center justify-center rounded-full",
+                          result.classification === "AI_GENERATED" ? "bg-red-500/20 text-red-400" : "bg-emerald-500/20 text-emerald-400"
+                        )}>
+                          {result.classification === "AI_GENERATED" ? (
+                            <AlertTriangle className="h-5 w-5" />
+                          ) : (
+                            <ShieldCheck className="h-5 w-5" />
+                          )}
                         </div>
-                        <div className="h-8 w-px bg-white/10"></div>
-                        <div className="flex flex-col">
-                          <span className="text-slate-400">Processing Time</span>
-                          <span className="font-semibold text-white">{result.inference_time_ms.toFixed(0)} ms</span>
-                        </div>
-                        <div className="h-8 w-px bg-white/10"></div>
-                        <div className="flex flex-col">
-                          <span className="text-slate-400">Model</span>
-                          <span className="font-semibold text-white truncate max-w-[120px]" title={result.model_name}>Wav2Vec2</span>
+                        <div>
+                          <h4 className="text-lg font-semibold text-white">
+                            {result.classification === "AI_GENERATED" ? "Suspected Deepfake" : "Authentic Audio Detected"}
+                          </h4>
+                          <p className="text-xs text-slate-400">Analysis Completed</p>
                         </div>
                       </div>
+                      <div className={cn(
+                        "rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider",
+                        result.classification === "AI_GENERATED" ? "bg-red-500 text-white" : "bg-emerald-500 text-white"
+                      )}>
+                        {result.classification === "AI_GENERATED" ? "FAKE" : "REAL"}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="rounded-xl bg-black/20 p-4">
+                        <p className="mb-1 text-xs font-medium uppercase text-slate-500">Confidence Score</p>
+                        <p className="text-2xl font-bold text-white">{(result.confidenceScore * 100).toFixed(1)}%</p>
+                      </div>
+                      <div className="rounded-xl bg-black/20 p-4">
+                        <p className="mb-1 text-xs font-medium uppercase text-slate-500">Language</p>
+                        <p className="text-2xl font-bold text-white">{result.language}</p>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 rounded-xl bg-black/20 p-4">
+                      <p className="mb-1 text-xs font-medium uppercase text-slate-500">Explanation</p>
+                      <p className="text-sm text-slate-300 leading-relaxed">{result.explanation}</p>
                     </div>
                   </div>
                 </div>
-              )}
-            </div>
+              )}    </div>
           </div>
         </main>
       </div>
